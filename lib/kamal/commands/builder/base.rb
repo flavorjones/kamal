@@ -13,6 +13,18 @@ class Kamal::Commands::Builder::Base < Kamal::Commands::Base
     docker :image, :rm, "--force", config.absolute_image
   end
 
+  def dev
+    dev_build_tags = build_tags.each_slice(2).flat_map { |flag, name| [ flag, "#{name}-dev" ] }
+    options = build_options - build_tags + dev_build_tags
+
+    docker :buildx, :build,
+      "--load",
+      *platform_options(arches),
+      *([ "--builder", builder_name ] unless docker_driver?),
+      *options,
+      build_context
+  end
+
   def push
     docker :buildx, :build,
       "--push",
